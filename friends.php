@@ -1,6 +1,6 @@
 <?php
-  $app_id = '193774037451640';
-  $app_secret = '3649fcfb1e829cca1eb4dab58bf7c145';
+  $app_id = 'APP ID HERE';
+  $app_secret = 'APP SECRET HERE';
   $my_url = 'http://localhost/vipul/ctf/friends.php';
 
   $code = $_REQUEST["code"];
