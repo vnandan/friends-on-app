@@ -1,7 +1,26 @@
+
+<style>caption {font-size: 1.7em; color: #F06; text-align: left;}
+table {margin: 0; padding: 0; border-collapse: collapse; width: 100%;}
+td, th {padding: 10px 4px; border-bottom: 1px solid #EEE;}
+td + td {border-left: 1px solid #FAFAFA; color: #999;}
+td + td + td {color: #666; border-left: none;}
+td a {color: #444; text-decoration: none; text-align: right;}
+td a, th a {display: block; width: 100%;}
+td a:hover {background: #444; color: #FFF;}
+tfoot th {text-align: right;}
+th {text-align: left;}
+th + th {text-align: right;}
+th + th + th {text-align: left;}
+th a {color: #F06; text-decoration: none; font-size: 1.1em;}
+th a:visited {color: #F69;}
+th a:hover {color: #F06; text-decoration: underline;}
+thead tr, tfoot tr {color: #555; font-size: 0.8em;}
+tr {font: 12px sans-serif; background: url(http://www.arcsin.se/external/csstablegallery/prettyinpink_row.png) repeat-x #F8F8F8; color: #666;}
+tr:hover {background: #FFF;}</style>
 <?php
-  $app_id = 'APP ID HERE';
-  $app_secret = 'APP SECRET HERE';
-  $my_url = 'http://localhost/vipul/ctf/friends.php';
+  $app_id = 'APP ID';
+  $app_secret = 'APP SECRET KEY';
+  $my_url = 'YOUR URL HERE';
 
   $code = $_REQUEST["code"];
 
@@ -23,28 +42,16 @@
 
   // run fql query
   $fql_query_url = 'https://graph.facebook.com/'
-    . 'fql?q=SELECT+uid,+name,+pic_square+FROM+user+WHERE+is_app_user=true)'
+    . 'fql?q=SELECT+pic_small,+name+FROM+user+WHERE+uid+IN(SELECT+uid2+FROM+friend+WHERE+uid1=me())+AND+is_app_user=1'
     . '&access_token=' . $access_token;
   $fql_query_result = file_get_contents($fql_query_url);
   $fql_query_obj = json_decode($fql_query_result, true);
-
   // display results of fql query
-  echo '<pre>';
-  print_r("query results:");
-  print_r($fql_query_obj);
-  echo '</pre>';
-
-  // run fql multiquery
-  $fql_multiquery_url = 'https://graph.facebook.com/'
-    . 'fql?q={"all+friends":"SELECT+uid2+FROM+friend+WHERE+uid1=me()",'
-    . '"my+name":"SELECT+name+FROM+user+WHERE+uid=me()"}'
-    . '&access_token=' . $access_token;
-  $fql_multiquery_result = file_get_contents($fql_multiquery_url);
-  $fql_multiquery_obj = json_decode($fql_multiquery_result, true);
-
-  // display results of fql multiquery
-  echo '<pre>';
-  print_r("multi query results:");
-  print_r($fql_multiquery_obj);
-  echo '</pre>';
+  echo "<table>";
+echo "<h2>There are ".sizeof($fql_query_obj[data])." results. Showing 10 of YOUR FRIENDS who have used <a href='http://unstablecode.com/travel'>TRAVEL WITH FRIENDS</a></h2>";
+for($i=0;$i<10;$i++)
+{
+echo '<tr><td><img src='.$fql_query_obj[data][$i][pic_small].' /></td><td>'.$fql_query_obj[data][$i][name].'</td><td>';
+}
+   echo "</table>";
 ?>
