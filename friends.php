@@ -15,7 +15,7 @@ th a {color: #F06; text-decoration: none; font-size: 1.1em;}
 th a:visited {color: #F69;}
 th a:hover {color: #F06; text-decoration: underline;}
 thead tr, tfoot tr {color: #555; font-size: 0.8em;}
-tr {font: 12px sans-serif; background: url(http://www.arcsin.se/external/csstablegallery/prettyinpink_row.png) repeat-x #F8F8F8; color: #666;}
+tr {font: 12px sans-serif; background: url(./img/prettyinpink_row.png) repeat-x #F8F8F8; color: #666;}
 tr:hover {background: #FFF;}</style>
 <?php
   $app_id = 'APP ID';
