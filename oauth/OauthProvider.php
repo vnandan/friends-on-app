@@ -48,7 +48,7 @@ abstract class OauthProvider {
 	 *	@param string $scope
 	 *	@return OauthProvider
 	 */
-	protected function setScope($scope) {
+	public function setScope($scope) {
 		$this->scope = $scope;
 
 		return $this;
@@ -57,7 +57,7 @@ abstract class OauthProvider {
 	/**
 	 *	@return string
 	 */
-	protected function getScope() {
+	public function getScope() {
 		return $this->scope;
 	}
 
@@ -116,7 +116,7 @@ abstract class OauthProvider {
 	 *	@param OauthAccessToken $token
 	 *	@return OauthProvider
 	 */
-	protected function setAccessToken(OauthAccessToken $token) {
+	public function setAccessToken(OauthAccessToken $token) {
 		$this->accessToken = $token;
 
 		return $this;
@@ -125,7 +125,7 @@ abstract class OauthProvider {
 	/**
 	 *	$return OauthAccessToken
 	 */
-	protected function getAccessToken() {
+	public function getAccessToken() {
 		return $this->accessToken;
 	}
 
@@ -133,7 +133,7 @@ abstract class OauthProvider {
 	 *	@param OauthRequestToken $token
 	 *	@return OauthProvider
 	 */
-	protected function setRequestToken(OauthRequestToken $token) {
+	public function setRequestToken(OauthRequestToken $token) {
 		$this->requestToken = $token;
 
 		return $this;
@@ -142,7 +142,7 @@ abstract class OauthProvider {
 	/**
 	 *	$return OauthRequestToken
 	 */
-	protected function getRequestToken() {
+	public function getRequestToken() {
 		return $this->requestToken;
 	}
 
@@ -152,23 +152,25 @@ abstract class OauthProvider {
 	protected function makeRequest($url, $content = null, array $headers = array()) {
 		$options = array(
 			CURLOPT_URL => $url,
+			CURLOPT_VERBOSE => true,
 			CURLOPT_HEADER => false,
-			CURLOPT_RETURNTRANSFER => 1,
+			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_USERAGENT => 'thegeektrawler (powered by cURL)',
 			CURLOPT_AUTOREFERER => true,
 			CURLOPT_MAXREDIRS => 10,
-			CURLOPT_FOLLOWLOCATION => 1,
-			CURLOPT_FORBID_REUSE => 1,
+			CURLOPT_FOLLOWLOCATION => true,
+			CURLOPT_FORBID_REUSE => true,
 			CURLOPT_TIMEOUT => 50,
 			CURLOPT_HTTPHEADER => $headers
 		);
 
 		if (null !== $content) {
-			$options = array_merge($options, array (
-					CURLOPT_POST => 1,
-					CURLOPT_POSTFIELDS => $content
-				)
+			$post = array (
+				CURLOPT_POST => 1,
+				CURLOPT_POSTFIELDS => $content
 			);
+
+			$options = $options + $post;
 		}
 
 		$ch = curl_init();
@@ -177,7 +179,7 @@ abstract class OauthProvider {
 		$response = array(
 			'content' => curl_exec($ch),
 			'error' => curl_errno($ch),
-			'httpcode' => 200
+			'httpcode' => curl_getinfo($ch, CURLINFO_HTTP_CODE)
 		);
 
 		curl_close($ch);
@@ -229,18 +231,37 @@ abstract class OauthProvider {
 			'redirect_uri' => $this->redirectUri
 		);
 
-		$response = $this->makeRequest($this->normalizeUrl($this->urls['access_token_url'], $params));
+		$access = function() use ($params) {
+			$response = $this->makeRequest($this->normalizeUrl($this->urls['access_token_url'], $params));
 
-		if ($response['httpcode'] != 200 || $response['error'] != 0) {
+			if ($response['httpcode'] >= 400 || $response['error'] != 0) {
+				return $this->makeRequest($this->urls['access_token_url'], http_build_query($params));
+			}
+
+			return $response;
+		};
+
+		$response = $access();
+
+		if ($response['httpcode'] >= 400 || $response['error'] != 0) {
 			return false;
 		}
 
-		parse_str($response['content'], $values);
-
 		$this->accessToken = new OauthAccessToken();
-		$this->accessToken->setToken($values['access_token']);
-		if (isset($values['refresh_token'])) {
-			$this->accessToken->setRefreshToken($values['refresh_token']);
+		$values = json_decode($response['content']);
+
+		if ($values) {
+			$this->accessToken
+				->setToken($values->access_token)
+				->setRefreshToken($values->refresh_token);
+		} else {
+			parse_str($response['content'], $values);
+
+			$this->accessToken->setToken($values['access_token']);
+
+			if (isset($values['refresh_token'])) {
+				$this->accessToken->setRefreshToken($values['refresh_token']);
+			}
 		}
 
 		return true;

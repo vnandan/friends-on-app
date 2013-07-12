@@ -96,7 +96,7 @@ thead tr,tfoot tr
 
 tr
 {
-	background:url(./img/prettyinpink_row.png) repeat-x #F8F8F8;
+	background: url('../img/prettyinpink_row.png') repeat-x #F8F8F8;
 	color:#666;
 	font:12px sans-serif;
 }

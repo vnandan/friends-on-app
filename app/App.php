@@ -3,12 +3,14 @@
 require_once __DIR__ . '/UserData.php';
 require_once __DIR__ . '/AppBase.php';
 require_once __DIR__ . '/AppHelper.php';
+require_once __DIR__ . '/../oauth/OauthAccessToken.php';
 require_once __DIR__ . '/../oauth/OauthProviderFactory.php';
 require_once __DIR__ . '/../util/Parameterized.php';
 
 class App extends AppBase {
 
 	private $appType;
+	private $configPath;
 
 	/**
 	 *	OAUTH provider
@@ -17,6 +19,7 @@ class App extends AppBase {
 
 	public function __construct($type, $configpath) {
 		$this->appType = $type;
+		$this->configPath = $configpath;
 
 		$params = new Parameterized($configpath);
 
@@ -27,12 +30,32 @@ class App extends AppBase {
 			->setOwnerId($params->get(strtoupper($type) . '_APP_ID'))
 			->setOwnerSecret($params->get(strtoupper($type) . '_APP_SECRET'));
 
-		if (!isset($_GET['code'])) {
-			$this->provider->beginAuthorization();
-		} else {
-			if (false === $this->provider->continueAuthorization($_GET['code'])) {
-				$this->renderErrorView('Authorization failed!');
+		if ($params->has(strtoupper($type) . '_APP_SCOPE')) {
+			$this->provider->setScope($params->get(strtoupper($type) . '_APP_SCOPE'));
+		}
+
+		// Authorize User
+		if (!isset($_COOKIE[$type . '_access_token'])) {
+			if (!isset($_GET['code'])) {
+				$this->provider->beginAuthorization();
+			} else {
+				if (false === $this->provider->continueAuthorization($_GET['code'])) {
+					throw new Exception("Authorization failed!");
+				} else {
+					setcookie(
+						$type . '_access_token',
+						$this->provider->getAccessToken()->getToken(),
+						time() + 3600, /* One hour */
+						'/friends-on-app/',
+						$_SERVER['HTTP_HOST'],
+						false,
+						true
+					);
+				}
 			}
+		} else {
+			$token = new OauthAccessToken();
+			$this->provider->setAccessToken($token->setToken($_COOKIE[$type . '_access_token']));
 		}
 	}
 
@@ -43,29 +66,11 @@ class App extends AppBase {
 		switch ($this->appType) {
 			case 'facebook':
 				return $this->fetchFacebookFriends();
+			case 'google':
+				return $this->fetchGoogleFriends();
 		}
 
 		return null;
-	}
-
-	public function renderFriendsView($friends) {
-		if ($friends == null) {
-			$friends = false;
-		}
-
-		extract($friends);
-
-		include 'templates/header.html.php';
-		include 'templates/friends.html.php';
-		include 'templates/footer.html.php';
-	}
-
-	public function renderErrorView($theError) {
-		extract($theError);
-
-		include 'templates/header.html.php';
-		include 'templates/error.html.php';
-		include 'templates/footer.html.php';
 	}
 
 	private function fetchFacebookFriends() {
@@ -86,4 +91,26 @@ class App extends AppBase {
 
 		return $ret;
 	}
+
+	private function fetchGoogleFriends() {
+		$url = 'https://www.googleapis.com/plus/v1/people/me/people/visible';
+
+		$params = new Parameterized($this->configPath);
+		$options = array (
+			'key' => $params->get('GOOGLE_APP_KEY')
+		);
+
+		$response = json_decode($this->provider->makeApiRequest($url, $options));
+		$ret = null;
+
+		if ($response) {
+			foreach ($response->items as $obj) {
+				$user = new UserData();
+				$ret[] = $user->setName($obj->displayName)->setImageUrl($obj->image->url);
+			}
+		}
+
+		return $ret;
+	}
 }
+

@@ -35,7 +35,7 @@ class Parameterized {
 				continue;
 			}
 
-			list ($key, $value) = explode(':', $kv);
+			list ($key, $value) = explode(':', $kv, 2);
 			$key = trim($key);
 			$value = trim($value);
 
