@@ -21,7 +21,7 @@ Oauth
 
 The OAUTH-2.0 spec is now available (to some, untested extent).
 
-Currently, only Facebook has a concrete OAUTH provider.
+Currently, only Facebook and Google has a concrete OAUTH provider.
 
 To set parameters for oauth providers, like the client-secret
 and client-id, add them to the config like so:
