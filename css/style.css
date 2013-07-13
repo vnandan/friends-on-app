@@ -1,0 +1,107 @@
+caption
+{
+	color:#F06;
+	font-size:1.7em;
+	text-align:left;
+}
+
+table
+{
+	border-collapse:collapse;
+	margin:0;
+	padding:0;
+	width:100%;
+}
+
+td,th
+{
+	border-bottom:1px solid #EEE;
+	padding:10px 4px;
+}
+
+td + td
+{
+	border-left:1px solid #FAFAFA;
+	color:#999;
+}
+
+td + td + td
+{
+	border-left:none;
+	color:#666;
+}
+
+td a
+{
+	color:#444;
+	text-align:right;
+	text-decoration:none;
+}
+
+td a,th a
+{
+	display:block;
+	width:100%;
+}
+
+td a:hover
+{
+	background:#444;
+	color:#FFF;
+}
+
+tfoot th
+{
+	text-align:right;
+}
+
+th
+{
+	text-align:left;
+}
+
+th + th
+{
+	text-align:right;
+}
+
+th + th + th
+{
+	text-align:left;
+}
+
+th a
+{
+	color:#F06;
+	font-size:1.1em;
+	text-decoration:none;
+}
+
+th a:visited
+{
+	color:#F69;
+}
+
+th a:hover
+{
+	color:#F06;
+	text-decoration:underline;
+}
+
+thead tr,tfoot tr
+{
+	color:#555;
+	font-size:.8em;
+}
+
+tr
+{
+	background: url('../img/prettyinpink_row.png') repeat-x #F8F8F8;
+	color:#666;
+	font:12px sans-serif;
+}
+
+tr:hover
+{
+	background:#FFF;
+}
